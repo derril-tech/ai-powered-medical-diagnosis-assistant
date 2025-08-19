@@ -1,0 +1,53 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@auramd_api_url",
+    "NEXT_PUBLIC_WS_URL": "@auramd_ws_url",
+    "NEXT_PUBLIC_APP_NAME": "AuraMD",
+    "NEXT_PUBLIC_VERSION": "1.0.0"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "@auramd_api_url",
+      "NEXT_PUBLIC_WS_URL": "@auramd_ws_url"
+    }
+  },
+  "functions": {
+    "pages/api/**/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://auramd-backend.onrender.com/api/:path*"
+    }
+  ]
+}

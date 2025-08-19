@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: auramd-backend
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: auramd-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: auramd-redis
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: CORS_ORIGINS
+        value: https://auramd.vercel.app,https://www.auramd.com
+    healthCheckPath: /health
+    
+  - type: redis
+    name: auramd-redis
+    plan: starter
+    
+databases:
+  - name: auramd-postgres
+    databaseName: auramd
+    user: auramd_user
+    plan: starter

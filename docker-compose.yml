@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: auramd-postgres
+    environment:
+      POSTGRES_DB: auramd
+      POSTGRES_USER: auramd_user
+      POSTGRES_PASSWORD: auramd_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - auramd-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: auramd-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - auramd-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: auramd-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://auramd_user:auramd_password@postgres:5432/auramd
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/venv
+    networks:
+      - auramd-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: auramd-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - auramd-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  auramd-network:
+    driver: bridge
